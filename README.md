@@ -1,4 +1,5 @@
-# Golden Trident Financial Readiness Check™
+# Financial Readiness Check™
+### by Michael Angelo Somosa
 
 A modern, AI-ready web application designed to generate high-quality insurance leads through financial readiness assessment.
 
@@ -105,6 +106,11 @@ The application is already running at:
 
 ## 🎨 Design System
 
+### Branding
+- **Product Brand**: Financial Readiness Check™
+- **Personal Brand**: by Michael Angelo Somosa
+- Independent financial wellness platform aesthetic
+
 ### Color Palette
 - **Primary Gold**: #D4AF37
 - **Dark Navy**: #0A2342
@@ -115,6 +121,8 @@ The application is already running at:
 - Premium, trustworthy design
 - Mobile-first responsive
 - Apple/Stripe-inspired aesthetics
+- **Product**: Financial Readiness Check™
+- **Advisor**: Michael Angelo Somosa
 
 ## 📱 Key Pages
 

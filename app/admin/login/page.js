@@ -59,8 +59,8 @@ export default function AdminLoginPage() {
                 <Shield className="w-7 h-7 text-white" />
               </div>
               <div className="text-left">
-                <h1 className="text-xl font-bold text-white">Golden Trident</h1>
-                <p className="text-xs text-gray-300">Admin Portal</p>
+                <h1 className="text-lg font-bold text-white leading-tight">Financial Readiness Check™</h1>
+                <p className="text-xs text-gray-300 font-light">Admin Portal</p>
               </div>
             </div>
           </Link>
@@ -130,8 +130,9 @@ export default function AdminLoginPage() {
           </CardContent>
         </Card>
 
-        <div className="mt-8 text-center text-sm text-gray-300">
-          <p>Golden Trident Financial Readiness System™</p>
+          <div className="mt-8 text-center text-sm text-gray-300">
+          <p>Financial Readiness Check™</p>
+          <p className="text-xs mt-1">by Michael Angelo Somosa</p>
         </div>
       </div>
     </div>

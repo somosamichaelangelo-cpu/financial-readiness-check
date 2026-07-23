@@ -116,7 +116,7 @@ export default function AssessmentPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold" style={{ color: '#0A2342' }}>
-              Golden Trident Financial Readiness Check™
+              Financial Readiness Check™
             </h1>
             <p className="text-sm text-gray-600">Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].title}</p>
           </div>

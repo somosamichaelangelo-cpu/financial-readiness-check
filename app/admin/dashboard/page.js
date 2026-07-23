@@ -73,8 +73,8 @@ export default function AdminDashboardPage() {
               <Award className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold" style={{ color: '#0A2342' }}>Golden Trident</h1>
-              <p className="text-xs text-gray-500">Admin Dashboard</p>
+              <h1 className="text-lg font-bold leading-tight" style={{ color: '#0A2342' }}>Financial Readiness Check™</h1>
+              <p className="text-xs text-gray-500 font-light">Admin Dashboard</p>
             </div>
           </div>
           <Button

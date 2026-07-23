@@ -13,13 +13,13 @@ export default function LandingPage() {
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-[#D4AF37] to-[#0A2342] rounded-lg flex items-center justify-center">
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold" style={{ color: '#0A2342' }}>Golden Trident</h1>
-              <p className="text-xs text-muted-foreground">Financial Readiness Check™</p>
+              <h1 className="text-lg font-bold leading-tight" style={{ color: '#0A2342' }}>Financial Readiness Check™</h1>
+              <p className="text-xs text-gray-500 font-light">by Michael Angelo Somosa</p>
             </div>
           </div>
           <Link href="/admin/login">
@@ -219,10 +219,10 @@ export default function LandingPage() {
       <footer className="border-t py-8" style={{ backgroundColor: '#0A2342' }}>
         <div className="container mx-auto px-4 text-center text-white">
           <p className="text-sm">
-            © {new Date().getFullYear()} Golden Trident Financial Readiness. All rights reserved.
+            © {new Date().getFullYear()} Financial Readiness Check™. All rights reserved.
           </p>
           <p className="text-xs mt-2 text-gray-400">
-            Licensed Financial Advisor • Sun Life Financial
+            by Michael Angelo Somosa • Licensed Financial Advisor • Sun Life Financial
           </p>
         </div>
       </footer>
