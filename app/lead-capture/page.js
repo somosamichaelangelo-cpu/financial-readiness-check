@@ -21,6 +21,7 @@ function LeadCaptureContent() {
     last_name: '',
     email: '',
     mobile: '',
+    messenger_link: '',
     preferred_contact: 'email',
     consent: false,
   })
@@ -169,6 +170,24 @@ function LeadCaptureContent() {
                   </div>
                 </RadioGroup>
               </div>
+
+              {/* Conditional Messenger Link Field */}
+              {formData.preferred_contact === 'messenger' && (
+                <div className="space-y-2 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <Label htmlFor="messenger_link">Facebook/Messenger Link *</Label>
+                  <Input
+                    id="messenger_link"
+                    type="url"
+                    value={formData.messenger_link || ''}
+                    onChange={(e) => updateField('messenger_link', e.target.value)}
+                    required={formData.preferred_contact === 'messenger'}
+                    placeholder="https://m.me/yourname or https://facebook.com/yourname"
+                  />
+                  <p className="text-xs text-gray-600">
+                    💡 Tip: Go to your Facebook profile → Click "..." → "Copy link" and paste it here
+                  </p>
+                </div>
+              )}
 
               <div className="border-t pt-4">
                 <div className="flex items-start space-x-2">
