@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Mail, Phone, Calendar, FileText, Loader2, Send } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Calendar, FileText, Loader2, Send, MessageCircle } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -188,6 +188,27 @@ export default function LeadDetailsPage() {
                     <p className="font-medium capitalize">{lead.preferred_contact || 'Not specified'}</p>
                   </div>
                 </div>
+                {/* Messenger Link - Show if preferred contact is messenger */}
+                {lead.messenger_link && (
+                  <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <MessageCircle className="w-5 h-5 text-blue-600 mt-1" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600 mb-2">Facebook/Messenger</p>
+                      <a
+                        href={lead.messenger_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Send Message on Messenger
+                      </a>
+                      <p className="text-xs text-gray-500 mt-2 break-all">
+                        {lead.messenger_link}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
