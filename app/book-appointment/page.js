@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, Clock, CheckCircle, Loader2 } from 'lucide-react'
 
-export default function BookAppointmentPage() {
+function BookAppointmentContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [leadId, setLeadId] = useState(null)
@@ -203,5 +203,17 @@ export default function BookAppointmentPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function BookAppointmentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#D4AF37' }} />
+      </div>
+    }>
+      <BookAppointmentContent />
+    </Suspense>
   )
 }
