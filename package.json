@@ -1,6 +1,8 @@
 {
-    "name": "nextjs-mongo-template",
-    "version": "0.1.0",
+    "name": "financial-readiness-check",
+    "version": "1.0.0",
+    "description": "Financial Readiness Assessment Platform by Michael Angelo Somosa",
+    "author": "Michael Angelo Somosa",
     "private": true,
     "scripts": {
         "dev": "NODE_OPTIONS='--max-old-space-size=512' next dev --hostname 0.0.0.0 --port 3000",

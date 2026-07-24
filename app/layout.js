@@ -2,8 +2,16 @@ import './globals.css'
 import { Providers } from './providers'
 
 export const metadata = {
-  title: 'Next.js MongoDB Template',
-  description: 'A simple template with App Router, MongoDB, and shadcn/ui',
+  title: 'Financial Readiness Check™ by Michael Angelo Somosa',
+  description: 'Free 60-second Financial Readiness Assessment - Discover how prepared you are for life\'s unexpected events. Get your personalized Financial Readiness Score and recommendations from Licensed Financial Advisor Michael Angelo Somosa.',
+  keywords: 'financial readiness, financial planning, insurance assessment, financial advisor, Sun Life Financial, Michael Angelo Somosa',
+  authors: [{ name: 'Michael Angelo Somosa' }],
+  creator: 'Michael Angelo Somosa',
+  openGraph: {
+    title: 'Financial Readiness Check™',
+    description: 'Take the FREE 60-second Financial Readiness Assessment',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({ children }) {
