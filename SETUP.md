@@ -4,7 +4,7 @@
 ## ✅ What's Been Built
 
 Your **Financial Readiness Check™** system is now live and running at:
-**https://trident-assess.preview.emergentagent.com**
+**https://financial-check-mail.preview.emergentagent.com**
 
 ## 🚨 CRITICAL: Database Setup Required
 
@@ -49,7 +49,7 @@ VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'michael@example.com', 'Michael 
 
 ### Test the Public Assessment Flow:
 
-1. **Visit**: https://trident-assess.preview.emergentagent.com
+1. **Visit**: https://financial-check-mail.preview.emergentagent.com
 2. **Click**: "Start Free Assessment"
 3. **Complete** all 8 steps of the assessment
 4. **Enter** your contact information
@@ -58,7 +58,7 @@ VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'michael@example.com', 'Michael 
 
 ### Test the Admin Dashboard:
 
-1. **Visit**: https://trident-assess.preview.emergentagent.com/admin/login
+1. **Visit**: https://financial-check-mail.preview.emergentagent.com/admin/login
 2. **Login** with the credentials you created in Step 2A
 3. **View** dashboard statistics
 4. **Click** "Manage Leads" to see submitted assessments
@@ -233,7 +233,7 @@ Before going live:
 Once you've completed the database setup (Steps 1-2), your application is **100% functional** and ready to generate leads!
 
 **Your Application URL:**
-https://trident-assess.preview.emergentagent.com
+https://financial-check-mail.preview.emergentagent.com
 
 **Questions?** Check `/app/README.md` for detailed documentation.
 

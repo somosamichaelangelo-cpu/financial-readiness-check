@@ -85,8 +85,8 @@ yarn install
 ### 5. Start the Application
 
 The application is already running at:
-- **Public Site**: https://trident-assess.preview.emergentagent.com
-- **Admin Login**: https://trident-assess.preview.emergentagent.com/admin/login
+- **Public Site**: https://financial-check-mail.preview.emergentagent.com
+- **Admin Login**: https://financial-check-mail.preview.emergentagent.com/admin/login
 
 ## 📊 Database Schema
 
