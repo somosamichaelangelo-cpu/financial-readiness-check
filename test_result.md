@@ -127,7 +127,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Resend email integration in /api/submit-assessment"
+    - "Book Free Consultation button links to Google Calendar"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -137,3 +137,25 @@ agent_communication:
     -message: "Please test POST /api/submit-assessment end-to-end. Verify: (1) returns HTTP 200 with leadId, readinessScore, and emailSent fields; (2) emailSent === false because RESEND_API_KEY is not set locally (graceful skip, no 500); (3) lead is inserted into Supabase leads table; (4) assessment_responses row is inserted; (5) GET /api/results?leadId=<id> still returns lead+assessment+recommendations; (6) existing admin endpoints are unaffected. Use realistic leadInfo+assessmentData payloads. Do NOT expect real emails to send (no key locally)."
     -agent: "testing"
     -message: "✅ BACKEND TESTING COMPLETE - ALL TESTS PASSED (15/15). Resend email integration is working correctly. Key findings: (1) POST /api/submit-assessment returns HTTP 200 with leadId (UUID), readinessScore (0-100), and emailSent=false when RESEND_API_KEY is missing - graceful skip confirmed, no 500 errors. (2) Lead and assessment data successfully persist to Supabase. (3) GET /api/results retrieves complete lead, assessment (with numeric fields parsed), and recommendations (strengths/improvements/priorities arrays). (4) Admin endpoints (/api/admin/leads, /api/admin/stats) still work correctly (return 401 without auth). (5) Tested with both realistic high-income payload (score 59) and minimal low-income payload (score 35) - both work correctly. Email delivery gracefully skips without breaking the assessment flow. No critical issues found. Ready for production."
+
+frontend:
+  - task: "Book Free Consultation button links to Google Calendar"
+    implemented: true
+    working: true
+    file: "app/results/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Changed the 'Book Free Consultation' button on the Results page from an internal Next.js <Link href=/book-appointment?leadId=X> to an external anchor <a href='https://calendar.app.google/XGDtjDgS7bago5Uo6' target='_blank' rel='noopener noreferrer'>. URL centralized as BOOKING_URL constant at top of file. /book-appointment route/design left untouched. No Google Calendar API/OAuth. Build passes. NEEDS FRONTEND VERIFICATION: on /results?leadId=<valid> the button must render prominently and its href must equal the Google Calendar URL and open in a new tab (target=_blank, rel=noopener noreferrer). It should NOT navigate to /book-appointment anymore."
+        -working: true
+        -agent: "testing"
+        -comment: "✅ ALL CHECKS PASSED (5/5). Created lead via POST /api/submit-assessment (leadId: c0810a0b-600f-4846-b164-802eeee4ff4d, score: 60), navigated to /results?leadId=<id>&emailSent=false. CHECK A: 'Book Free Consultation' button is visible and prominent inside the dark gold CTA card 'Ready to Take Action?' - PASS. CHECK B: Button's anchor href is exactly 'https://calendar.app.google/XGDtjDgS7bago5Uo6' (no /book-appointment) - PASS. CHECK C: Anchor has target='_blank' and rel='noopener noreferrer' - PASS. CHECK D: Button does NOT navigate to /book-appointment (verified no '/book-appointment' in href) - PASS. CHECK E: Results page renders completely with readiness score circle (60/100 - Good), Your Strengths (2 items), Areas for Improvement (3 items), Recommended Next Steps (3 priorities), and email status footer - PASS. Button click successfully opened new tab to Google Calendar external site (calendar.google.com). Implementation is correct and working as specified."
+
+agent_communication:
+    -agent: "main"
+    -message: "FRONTEND TEST NEEDED for the Book Free Consultation button. Flow to reach Results page: (1) go to /assessment, fill and submit the multi-step form, (2) /lead-capture fill contact info + consent and submit -> redirects to /results?leadId=...&emailSent=... OR directly navigate to /results?leadId=<existing lead id from Supabase>. If you need a valid leadId quickly, you can POST /api/submit-assessment first to create one, then open /results?leadId=<id>&emailSent=false. VERIFY: The 'Book Free Consultation' button inside the gold CTA card (a) is visible/prominent, (b) is an anchor whose href is exactly https://calendar.app.google/XGDtjDgS7bago5Uo6, (c) has target=_blank and rel contains noopener, (d) does NOT route to /book-appointment. Do NOT actually complete a Google booking. Also confirm the rest of the Results page (score, strengths, improvements, priorities, email-status footer) still renders."
+    -agent: "testing"
+    -message: "✅ FRONTEND TESTING COMPLETE - ALL CHECKS PASSED. The 'Book Free Consultation' button on the Results page is working perfectly. Button correctly links to the external Google Calendar URL (https://calendar.app.google/XGDtjDgS7bago5Uo6) with proper target='_blank' and rel='noopener noreferrer' attributes. Button does NOT navigate to /book-appointment. Results page renders completely with all sections (score circle, strengths, improvements, priorities, email footer). Button click successfully opens Google Calendar in a new tab. No issues found. Feature is production-ready."

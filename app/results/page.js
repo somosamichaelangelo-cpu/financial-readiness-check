@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import { CheckCircle2, AlertTriangle, TrendingUp, Calendar, ArrowRight, Loader2 } from 'lucide-react'
+
+// Public Google Calendar appointment booking page.
+// Centralized here so it can be updated in one place if the link ever changes.
+const BOOKING_URL = 'https://calendar.app.google/XGDtjDgS7bago5Uo6'
 
 function maskEmail(email) {
   if (!email || typeof email !== 'string' || !email.includes('@')) return ''
@@ -210,7 +213,7 @@ function ResultsContent() {
             <p className="text-lg mb-6 text-gray-200">
               Book a FREE Financial Needs Analysis to discuss your personalized roadmap to financial readiness.
             </p>
-            <Link href={`/book-appointment?leadId=${lead.id}`}>
+            <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">
               <Button
                 size="lg"
                 className="text-lg px-8 py-6"
@@ -219,7 +222,7 @@ function ResultsContent() {
                 Book Free Consultation
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
-            </Link>
+            </a>
             <p className="text-sm mt-4 text-gray-300">30-minute session • No obligation • 100% Free</p>
           </CardContent>
         </Card>
