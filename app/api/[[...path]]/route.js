@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { calculateFinancialReadinessScore, calculateBuyingIntent, generateRecommendations } from '@/lib/scoring'
+import { sendAssessmentEmails } from '@/lib/email'
+
+export const runtime = 'nodejs'
 
 // Handle POST requests
 export async function POST(request) {
@@ -69,7 +72,50 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Failed to save assessment' }, { status: 500 })
       }
 
-      return NextResponse.json({ leadId: lead.id, readinessScore })
+      // -------- Email delivery (must NEVER break the assessment flow) --------
+      let emailSent = false
+      try {
+        // Build a numeric assessment object for recommendation generation,
+        // mirroring the same parsing used for the DB insert above.
+        const parsedAssessment = {
+          ...assessmentData,
+          monthly_income: parseFloat(assessmentData.monthly_income) || 0,
+          additional_income: parseFloat(assessmentData.additional_income) || 0,
+          monthly_expenses: parseFloat(assessmentData.monthly_expenses) || 0,
+          emergency_fund: parseFloat(assessmentData.emergency_fund) || 0,
+          savings: parseFloat(assessmentData.savings) || 0,
+          life_insurance_coverage: parseFloat(assessmentData.life_insurance_coverage) || 0,
+          home_loan: parseFloat(assessmentData.home_loan) || 0,
+          car_loan: parseFloat(assessmentData.car_loan) || 0,
+          personal_loan: parseFloat(assessmentData.personal_loan) || 0,
+          credit_card_debt: parseFloat(assessmentData.credit_card_debt) || 0,
+          other_debt: parseFloat(assessmentData.other_debt) || 0,
+        }
+
+        const recommendations = generateRecommendations(readinessScore, parsedAssessment)
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || ''
+        const bookingUrl = `${baseUrl}/book-appointment?leadId=${lead.id}`
+        const adminLeadUrl = baseUrl ? `${baseUrl}/admin/leads/${lead.id}` : ''
+
+        emailSent = await sendAssessmentEmails({
+          lead,
+          score: readinessScore,
+          buyingIntent,
+          recommendations,
+          bookingUrl,
+          adminLeadUrl,
+        })
+      } catch (emailError) {
+        // Log server-side only; do not surface to client or fail the request.
+        console.error('Financial Readiness email failed', {
+          leadId: lead.id,
+          error: emailError?.message,
+        })
+        emailSent = false
+      }
+
+      return NextResponse.json({ leadId: lead.id, readinessScore, emailSent })
     } catch (error) {
       console.error('Submit assessment error:', error)
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

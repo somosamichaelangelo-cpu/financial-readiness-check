@@ -64,7 +64,7 @@ function LeadCaptureContent() {
 
       const result = await response.json()
       if (response.ok) {
-        router.push(`/results?leadId=${result.leadId}`)
+        router.push(`/results?leadId=${result.leadId}&emailSent=${result.emailSent ? 'true' : 'false'}`)
       } else {
         alert(result.error || 'Failed to submit assessment')
       }

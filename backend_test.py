@@ -1,223 +1,349 @@
 #!/usr/bin/env python3
 """
-Backend API Test for Lead Submission Flow
-Tests the /api/submit-assessment endpoint
+Backend API tests for Financial Readiness Check - Resend Email Integration
+Tests the /api/submit-assessment endpoint with email graceful skip when RESEND_API_KEY is missing.
 """
 
 import requests
 import json
 import os
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv('/app/.env')
+import sys
 
 # Get base URL from environment
-BASE_URL = os.getenv('NEXT_PUBLIC_BASE_URL', 'http://localhost:3000')
-API_URL = f"{BASE_URL}/api"
+BASE_URL = os.getenv('NEXT_PUBLIC_BASE_URL', 'https://financial-check-mail.preview.emergentagent.com')
+API_BASE = f"{BASE_URL}/api"
 
-print(f"Testing API at: {API_URL}")
+print(f"Testing against: {API_BASE}")
 print("=" * 80)
 
-# Test data provided in the review request
-test_data = {
+# Track test results
+test_results = {
+    "passed": 0,
+    "failed": 0,
+    "tests": []
+}
+
+def log_test(name, passed, message=""):
+    """Log test result"""
+    status = "✅ PASS" if passed else "❌ FAIL"
+    print(f"{status}: {name}")
+    if message:
+        print(f"   {message}")
+    
+    test_results["tests"].append({
+        "name": name,
+        "passed": passed,
+        "message": message
+    })
+    
+    if passed:
+        test_results["passed"] += 1
+    else:
+        test_results["failed"] += 1
+
+def print_summary():
+    """Print test summary"""
+    print("\n" + "=" * 80)
+    print("TEST SUMMARY")
+    print("=" * 80)
+    print(f"Total: {test_results['passed'] + test_results['failed']}")
+    print(f"Passed: {test_results['passed']}")
+    print(f"Failed: {test_results['failed']}")
+    print("=" * 80)
+    
+    if test_results["failed"] > 0:
+        print("\nFailed tests:")
+        for test in test_results["tests"]:
+            if not test["passed"]:
+                print(f"  ❌ {test['name']}")
+                if test["message"]:
+                    print(f"     {test['message']}")
+
+# ============================================================================
+# TEST 1: POST /api/submit-assessment with realistic payload
+# ============================================================================
+print("\n[TEST 1] POST /api/submit-assessment with realistic payload")
+print("-" * 80)
+
+payload_1 = {
     "leadInfo": {
-        "first_name": "Michael",
-        "last_name": "Test",
-        "email": "test@example.com",
-        "mobile": "09512105160",
+        "first_name": "Juan",
+        "last_name": "Dela Cruz",
+        "email": "juan.delacruz@example.com",
+        "mobile": "09171234567",
         "preferred_contact": "email",
         "consent": True
     },
     "assessmentData": {
-        "age": "30",
-        "gender": "male",
-        "marital_status": "married",
-        "num_children": 2,
-        "occupation": "Engineer",
-        "location": "Manila",
-        "dependents": 3,
-        "spouse_working": True,
-        "monthly_income": "50000",
-        "additional_income": "10000",
-        "monthly_expenses": "30000",
-        "housing_cost": "10000",
-        "emergency_fund": "100000",
+        "age": "35",
+        "num_children": "2",
+        "dependents": "3",
+        "monthly_income": "60000",
+        "additional_income": "5000",
+        "monthly_expenses": "35000",
+        "housing_cost": "12000",
+        "emergency_fund": "150000",
         "savings": "200000",
-        "existing_investments": True,
         "has_life_insurance": True,
-        "life_insurance_coverage": "1000000",
+        "life_insurance_coverage": "2000000",
         "has_health_insurance": True,
         "has_critical_illness": False,
         "has_hmo": True,
         "has_accident_insurance": False,
-        "home_loan": "1000000",
-        "car_loan": "500000",
+        "home_loan": "0",
+        "car_loan": "300000",
         "personal_loan": "0",
-        "credit_card_debt": "50000",
+        "credit_card_debt": "20000",
         "other_debt": "0",
-        "goals": ["Protect family", "Retirement planning"]
+        "existing_investments": True,
+        "goals": ["retirement", "education", "protection"]
     }
 }
 
-def test_submit_assessment():
-    """Test the submit-assessment endpoint"""
-    print("\n1. Testing POST /api/submit-assessment")
-    print("-" * 80)
+try:
+    response = requests.post(f"{API_BASE}/submit-assessment", json=payload_1, timeout=30)
+    print(f"Status Code: {response.status_code}")
+    print(f"Response: {response.text[:500]}")
     
-    try:
-        url = f"{API_URL}/submit-assessment"
-        print(f"Request URL: {url}")
-        print(f"Request payload: {json.dumps(test_data, indent=2)}")
+    # Check status code
+    if response.status_code == 200:
+        log_test("Test 1: HTTP 200 status", True)
         
-        response = requests.post(
-            url,
-            json=test_data,
-            headers={'Content-Type': 'application/json'},
-            timeout=30
-        )
-        
-        print(f"\nResponse Status Code: {response.status_code}")
-        print(f"Response Headers: {dict(response.headers)}")
-        
+        # Parse JSON
         try:
-            response_data = response.json()
-            print(f"Response Body: {json.dumps(response_data, indent=2)}")
-        except json.JSONDecodeError:
-            print(f"Response Body (raw): {response.text}")
+            data = response.json()
+            print(f"Full Response JSON: {json.dumps(data, indent=2)}")
+            
+            # Check for leadId (UUID)
+            if "leadId" in data and data["leadId"]:
+                lead_id_1 = data["leadId"]
+                log_test("Test 1: leadId present", True, f"leadId: {lead_id_1}")
+            else:
+                log_test("Test 1: leadId present", False, "leadId missing in response")
+                lead_id_1 = None
+            
+            # Check for readinessScore (number 0-100)
+            if "readinessScore" in data:
+                score = data["readinessScore"]
+                if isinstance(score, (int, float)) and 0 <= score <= 100:
+                    log_test("Test 1: readinessScore valid", True, f"Score: {score}")
+                else:
+                    log_test("Test 1: readinessScore valid", False, f"Invalid score: {score}")
+            else:
+                log_test("Test 1: readinessScore present", False, "readinessScore missing")
+            
+            # Check for emailSent === false
+            if "emailSent" in data:
+                email_sent = data["emailSent"]
+                if email_sent == False:
+                    log_test("Test 1: emailSent === false", True, "Email gracefully skipped (no RESEND_API_KEY)")
+                else:
+                    log_test("Test 1: emailSent === false", False, f"emailSent is {email_sent}, expected false")
+            else:
+                log_test("Test 1: emailSent field present", False, "emailSent missing")
+            
+            # Check it's NOT "Failed to create lead"
+            if "error" in data and "Failed to create lead" in data.get("error", ""):
+                log_test("Test 1: No 'Failed to create lead' error", False, "Got 'Failed to create lead' error")
+            else:
+                log_test("Test 1: No 'Failed to create lead' error", True)
+                
+        except json.JSONDecodeError as e:
+            log_test("Test 1: Valid JSON response", False, f"JSON decode error: {e}")
+            lead_id_1 = None
+    else:
+        log_test("Test 1: HTTP 200 status", False, f"Got {response.status_code}")
+        lead_id_1 = None
+        
+except Exception as e:
+    log_test("Test 1: Request successful", False, f"Exception: {e}")
+    lead_id_1 = None
+
+# ============================================================================
+# TEST 2: GET /api/results?leadId=<leadId from test 1>
+# ============================================================================
+print("\n[TEST 2] GET /api/results?leadId=<leadId from test 1>")
+print("-" * 80)
+
+if lead_id_1:
+    try:
+        response = requests.get(f"{API_BASE}/results?leadId={lead_id_1}", timeout=30)
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.text[:500]}")
         
         if response.status_code == 200:
-            print("\n✅ SUCCESS: Lead submission successful!")
-            if 'leadId' in response_data:
-                print(f"   Lead ID: {response_data['leadId']}")
-            if 'readinessScore' in response_data:
-                print(f"   Readiness Score: {response_data['readinessScore']}")
-            return True, response_data
-        else:
-            print(f"\n❌ FAILED: Status code {response.status_code}")
-            if 'error' in response_data:
-                print(f"   Error: {response_data['error']}")
-            return False, response_data
+            log_test("Test 2: HTTP 200 status", True)
             
-    except requests.exceptions.ConnectionError as e:
-        print(f"\n❌ CONNECTION ERROR: Cannot connect to {url}")
-        print(f"   Error: {str(e)}")
-        return False, None
-    except requests.exceptions.Timeout as e:
-        print(f"\n❌ TIMEOUT ERROR: Request timed out")
-        print(f"   Error: {str(e)}")
-        return False, None
-    except Exception as e:
-        print(f"\n❌ UNEXPECTED ERROR: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return False, None
-
-def test_supabase_connection():
-    """Test if Supabase is accessible"""
-    print("\n2. Testing Supabase Connection")
-    print("-" * 80)
-    
-    supabase_url = os.getenv('NEXT_PUBLIC_SUPABASE_URL')
-    supabase_key = os.getenv('NEXT_PUBLIC_SUPABASE_ANON_KEY')
-    
-    print(f"Supabase URL: {supabase_url}")
-    print(f"Supabase Key: {supabase_key[:20]}..." if supabase_key else "Not found")
-    
-    if not supabase_url or not supabase_key:
-        print("\n❌ FAILED: Supabase credentials not found in environment")
-        return False
-    
-    try:
-        # Test Supabase REST API health
-        response = requests.get(
-            f"{supabase_url}/rest/v1/",
-            headers={
-                'apikey': supabase_key,
-                'Authorization': f'Bearer {supabase_key}'
-            },
-            timeout=10
-        )
-        
-        print(f"Supabase API Status: {response.status_code}")
-        
-        if response.status_code in [200, 404]:  # 404 is ok, means API is reachable
-            print("✅ SUCCESS: Supabase is accessible")
-            return True
+            try:
+                data = response.json()
+                print(f"Full Response JSON: {json.dumps(data, indent=2)[:1000]}")
+                
+                # Check for lead object
+                if "lead" in data and data["lead"]:
+                    lead = data["lead"]
+                    # Verify lead info matches
+                    if lead.get("first_name") == "Juan" and lead.get("last_name") == "Dela Cruz":
+                        log_test("Test 2: Lead data matches", True, f"Name: {lead.get('first_name')} {lead.get('last_name')}")
+                    else:
+                        log_test("Test 2: Lead data matches", False, f"Name mismatch: {lead.get('first_name')} {lead.get('last_name')}")
+                else:
+                    log_test("Test 2: Lead object present", False, "lead missing in response")
+                
+                # Check for assessment object
+                if "assessment" in data and data["assessment"]:
+                    assessment = data["assessment"]
+                    # Verify numeric fields are parsed
+                    if isinstance(assessment.get("monthly_income"), (int, float)):
+                        log_test("Test 2: Assessment numeric fields parsed", True, f"monthly_income: {assessment.get('monthly_income')}")
+                    else:
+                        log_test("Test 2: Assessment numeric fields parsed", False, f"monthly_income not numeric: {assessment.get('monthly_income')}")
+                else:
+                    log_test("Test 2: Assessment object present", False, "assessment missing in response")
+                
+                # Check for recommendations object
+                if "recommendations" in data and data["recommendations"]:
+                    recs = data["recommendations"]
+                    has_strengths = "strengths" in recs and isinstance(recs["strengths"], list)
+                    has_improvements = "improvements" in recs and isinstance(recs["improvements"], list)
+                    has_priorities = "priorities" in recs and isinstance(recs["priorities"], list)
+                    
+                    if has_strengths and has_improvements and has_priorities:
+                        log_test("Test 2: Recommendations structure valid", True, 
+                                f"strengths: {len(recs['strengths'])}, improvements: {len(recs['improvements'])}, priorities: {len(recs['priorities'])}")
+                    else:
+                        log_test("Test 2: Recommendations structure valid", False, "Missing strengths/improvements/priorities arrays")
+                else:
+                    log_test("Test 2: Recommendations object present", False, "recommendations missing in response")
+                    
+            except json.JSONDecodeError as e:
+                log_test("Test 2: Valid JSON response", False, f"JSON decode error: {e}")
         else:
-            print(f"❌ FAILED: Unexpected status code {response.status_code}")
-            return False
+            log_test("Test 2: HTTP 200 status", False, f"Got {response.status_code}")
             
     except Exception as e:
-        print(f"❌ FAILED: Cannot connect to Supabase")
-        print(f"   Error: {str(e)}")
-        return False
+        log_test("Test 2: Request successful", False, f"Exception: {e}")
+else:
+    log_test("Test 2: Skipped", False, "No leadId from Test 1")
 
-def test_api_health():
-    """Test if the API is running"""
-    print("\n3. Testing API Health")
-    print("-" * 80)
-    
-    try:
-        # Try to access a non-existent endpoint to see if API responds
-        response = requests.get(f"{API_URL}/health", timeout=10)
-        print(f"API Response Status: {response.status_code}")
-        
-        if response.status_code in [200, 404]:  # Either is fine, means API is running
-            print("✅ SUCCESS: API is responding")
-            return True
-        else:
-            print(f"⚠️  WARNING: Unexpected status code {response.status_code}")
-            return True  # Still consider it working
-            
-    except requests.exceptions.ConnectionError:
-        print("❌ FAILED: Cannot connect to API")
-        return False
-    except Exception as e:
-        print(f"❌ FAILED: {str(e)}")
-        return False
+# ============================================================================
+# TEST 3: POST /api/submit-assessment with minimal/low-income payload
+# ============================================================================
+print("\n[TEST 3] POST /api/submit-assessment with minimal/low-income payload")
+print("-" * 80)
 
-def main():
-    """Run all tests"""
-    print("\n" + "=" * 80)
-    print("BACKEND API TEST - LEAD SUBMISSION FLOW")
-    print("=" * 80)
-    
-    results = {
-        'api_health': False,
-        'supabase_connection': False,
-        'submit_assessment': False
+payload_3 = {
+    "leadInfo": {
+        "first_name": "Test",
+        "last_name": "LowScore",
+        "email": "lowscore@example.com",
+        "mobile": "09170000000",
+        "preferred_contact": "phone",
+        "consent": True
+    },
+    "assessmentData": {
+        "age": "25",
+        "num_children": "0",
+        "dependents": "0",
+        "monthly_income": "10000",
+        "additional_income": "0",
+        "monthly_expenses": "9000",
+        "housing_cost": "5000",
+        "emergency_fund": "0",
+        "savings": "0",
+        "has_life_insurance": False,
+        "life_insurance_coverage": "0",
+        "has_health_insurance": False,
+        "has_critical_illness": False,
+        "has_hmo": False,
+        "has_accident_insurance": False,
+        "home_loan": "0",
+        "car_loan": "0",
+        "personal_loan": "0",
+        "credit_card_debt": "0",
+        "other_debt": "0",
+        "existing_investments": False,
+        "goals": []
     }
-    
-    # Test 1: API Health
-    results['api_health'] = test_api_health()
-    
-    # Test 2: Supabase Connection
-    results['supabase_connection'] = test_supabase_connection()
-    
-    # Test 3: Submit Assessment (main test)
-    success, response_data = test_submit_assessment()
-    results['submit_assessment'] = success
-    
-    # Summary
-    print("\n" + "=" * 80)
-    print("TEST SUMMARY")
-    print("=" * 80)
-    
-    for test_name, result in results.items():
-        status = "✅ PASSED" if result else "❌ FAILED"
-        print(f"{test_name.replace('_', ' ').title()}: {status}")
-    
-    all_passed = all(results.values())
-    
-    print("\n" + "=" * 80)
-    if all_passed:
-        print("OVERALL: ✅ ALL TESTS PASSED")
-    else:
-        print("OVERALL: ❌ SOME TESTS FAILED")
-    print("=" * 80)
-    
-    return all_passed
+}
 
-if __name__ == "__main__":
-    main()
+try:
+    response = requests.post(f"{API_BASE}/submit-assessment", json=payload_3, timeout=30)
+    print(f"Status Code: {response.status_code}")
+    print(f"Response: {response.text[:500]}")
+    
+    if response.status_code == 200:
+        log_test("Test 3: HTTP 200 status", True)
+        
+        try:
+            data = response.json()
+            print(f"Full Response JSON: {json.dumps(data, indent=2)}")
+            
+            # Check for emailSent === false
+            if "emailSent" in data and data["emailSent"] == False:
+                log_test("Test 3: emailSent === false", True)
+            else:
+                log_test("Test 3: emailSent === false", False, f"emailSent: {data.get('emailSent')}")
+            
+            # Check for valid (low) readinessScore
+            if "readinessScore" in data:
+                score = data["readinessScore"]
+                if isinstance(score, (int, float)) and 0 <= score <= 100:
+                    log_test("Test 3: Valid low readinessScore", True, f"Score: {score}")
+                else:
+                    log_test("Test 3: Valid readinessScore", False, f"Invalid score: {score}")
+            else:
+                log_test("Test 3: readinessScore present", False, "readinessScore missing")
+            
+            # Check for leadId
+            if "leadId" in data and data["leadId"]:
+                log_test("Test 3: leadId present", True, f"leadId: {data['leadId']}")
+            else:
+                log_test("Test 3: leadId present", False, "leadId missing")
+                
+        except json.JSONDecodeError as e:
+            log_test("Test 3: Valid JSON response", False, f"JSON decode error: {e}")
+    else:
+        log_test("Test 3: HTTP 200 status", False, f"Got {response.status_code}")
+        
+except Exception as e:
+    log_test("Test 3: Request successful", False, f"Exception: {e}")
+
+# ============================================================================
+# TEST 4: Admin endpoints still work (return 401 without auth)
+# ============================================================================
+print("\n[TEST 4] Admin endpoints return 401 without auth")
+print("-" * 80)
+
+# Test GET /api/admin/leads
+try:
+    response = requests.get(f"{API_BASE}/admin/leads", timeout=30)
+    print(f"GET /api/admin/leads - Status Code: {response.status_code}")
+    
+    if response.status_code == 401:
+        log_test("Test 4: GET /api/admin/leads returns 401", True, "Unauthorized (expected)")
+    else:
+        log_test("Test 4: GET /api/admin/leads returns 401", False, f"Got {response.status_code}")
+        
+except Exception as e:
+    log_test("Test 4: GET /api/admin/leads request", False, f"Exception: {e}")
+
+# Test GET /api/admin/stats
+try:
+    response = requests.get(f"{API_BASE}/admin/stats", timeout=30)
+    print(f"GET /api/admin/stats - Status Code: {response.status_code}")
+    
+    if response.status_code == 401:
+        log_test("Test 4: GET /api/admin/stats returns 401", True, "Unauthorized (expected)")
+    else:
+        log_test("Test 4: GET /api/admin/stats returns 401", False, f"Got {response.status_code}")
+        
+except Exception as e:
+    log_test("Test 4: GET /api/admin/stats request", False, f"Exception: {e}")
+
+# ============================================================================
+# Print Summary
+# ============================================================================
+print_summary()
+
+# Exit with appropriate code
+sys.exit(0 if test_results["failed"] == 0 else 1)

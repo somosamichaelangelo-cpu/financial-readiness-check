@@ -8,11 +8,24 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, AlertTriangle, TrendingUp, Calendar, ArrowRight, Loader2 } from 'lucide-react'
 
+function maskEmail(email) {
+  if (!email || typeof email !== 'string' || !email.includes('@')) return ''
+  const [local, domain] = email.split('@')
+  if (local.length <= 2) {
+    return `${local[0] || ''}***@${domain}`
+  }
+  const first = local[0]
+  const last = local[local.length - 1]
+  const stars = '*'.repeat(Math.max(3, local.length - 2))
+  return `${first}${stars}${last}@${domain}`
+}
+
 function ResultsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [results, setResults] = useState(null)
+  const emailSent = searchParams.get('emailSent') === 'true'
 
   useEffect(() => {
     const leadId = searchParams.get('leadId')
@@ -212,8 +225,16 @@ function ResultsContent() {
         </Card>
 
         {/* Footer Note */}
-        <div className="text-center mt-8 text-sm text-gray-500">
-          <p>Your report has been saved. We'll send a copy to {lead.email}</p>
+        <div className="text-center mt-8 text-sm">
+          {emailSent ? (
+            <p className="text-emerald-600 font-medium">
+              ✓ Your Financial Readiness Report has been sent to {maskEmail(lead.email)}.
+            </p>
+          ) : (
+            <p className="text-gray-500">
+              Your report is ready below. We couldn&apos;t send the email right now, but you can still view your results.
+            </p>
+          )}
         </div>
       </div>
     </div>
