@@ -122,12 +122,11 @@ backend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 2
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Book Free Consultation button links to Google Calendar"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -159,3 +158,24 @@ agent_communication:
     -message: "FRONTEND TEST NEEDED for the Book Free Consultation button. Flow to reach Results page: (1) go to /assessment, fill and submit the multi-step form, (2) /lead-capture fill contact info + consent and submit -> redirects to /results?leadId=...&emailSent=... OR directly navigate to /results?leadId=<existing lead id from Supabase>. If you need a valid leadId quickly, you can POST /api/submit-assessment first to create one, then open /results?leadId=<id>&emailSent=false. VERIFY: The 'Book Free Consultation' button inside the gold CTA card (a) is visible/prominent, (b) is an anchor whose href is exactly https://calendar.app.google/XGDtjDgS7bago5Uo6, (c) has target=_blank and rel contains noopener, (d) does NOT route to /book-appointment. Do NOT actually complete a Google booking. Also confirm the rest of the Results page (score, strengths, improvements, priorities, email-status footer) still renders."
     -agent: "testing"
     -message: "✅ FRONTEND TESTING COMPLETE - ALL CHECKS PASSED. The 'Book Free Consultation' button on the Results page is working perfectly. Button correctly links to the external Google Calendar URL (https://calendar.app.google/XGDtjDgS7bago5Uo6) with proper target='_blank' and rel='noopener noreferrer' attributes. Button does NOT navigate to /book-appointment. Results page renders completely with all sections (score circle, strengths, improvements, priorities, email footer). Button click successfully opens Google Calendar in a new tab. No issues found. Feature is production-ready."
+
+  - task: "Email client report CTA points to Google Calendar"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js, lib/email.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Changed email bookingUrl in submit-assessment from `${baseUrl}/book-appointment?leadId=X` to the public Google Calendar URL https://calendar.app.google/XGDtjDgS7bago5Uo6. This value flows into buildClientEmailHtml (button href) and buildClientEmailText. Email design/content otherwise unchanged. NOTE: email HTML is only generated when RESEND_API_KEY is set, which it is NOT locally, so the link itself cannot be runtime-observed here. REGRESSION CHECK NEEDED: ensure the edit did not break POST /api/submit-assessment (still 200 with leadId+readinessScore+emailSent=false; lead+assessment still persist; GET /api/results still works)."
+        -working: true
+        -agent: "testing"
+        -comment: "✅ ALL REGRESSION TESTS PASSED (4/4). Test 1: POST /api/submit-assessment with Carlos Reyes payload returns HTTP 200 with leadId (3eb1752d-caee-4299-8ea0-a960de68e09e), readinessScore (73), and emailSent=false (graceful skip, no RESEND_API_KEY). No 'Failed to create lead' error. Test 2: GET /api/results?leadId=<id> returns HTTP 200 with lead (Carlos Reyes, carlos.reyes@example.com), assessment (numeric fields parsed: monthly_income=80000), and recommendations (4 strengths, 0 improvements, 0 priorities). Lead and assessment persisted to Supabase. Test 3: POST /api/book-appointment returns HTTP 200 with success=true and appointmentId (3c01125b-dcaf-48fe-995d-a12a574585e7). Test 4: GET /api/admin/leads and GET /api/admin/stats both return 401 Unauthorized (expected behavior). Email CTA booking URL change to Google Calendar did NOT break the submit-assessment flow. All endpoints working correctly."
+
+agent_communication:
+    -agent: "main"
+    -message: "REGRESSION TEST NEEDED after editing the email booking URL inside /api/submit-assessment. Please re-run POST /api/submit-assessment with a realistic leadInfo+assessmentData payload and confirm: (1) HTTP 200 with leadId (UUID), readinessScore (number), emailSent=false (no RESEND_API_KEY locally, graceful skip, NO 500); (2) lead persisted (GET /api/results?leadId=<id> returns lead+assessment+recommendations); (3) /api/book-appointment and admin endpoints unaffected (admin endpoints still return 401 without auth). The email body/link cannot be observed without a Resend key — only verify the submit flow is intact."
+    -agent: "testing"
+    -message: "✅ REGRESSION TEST COMPLETE - ALL TESTS PASSED (4/4). Executed comprehensive backend regression test after email CTA booking URL change to Google Calendar. Key findings: (1) POST /api/submit-assessment works correctly - returns HTTP 200 with leadId (UUID), readinessScore (73 for Carlos Reyes payload), and emailSent=false (graceful skip without RESEND_API_KEY, no 500 errors). (2) Lead and assessment data successfully persist to Supabase with numeric fields properly parsed (monthly_income=80000 as number, not string). (3) GET /api/results retrieves complete lead, assessment, and recommendations (4 strengths, 0 improvements, 0 priorities). (4) POST /api/book-appointment works correctly - returns HTTP 200 with success=true and appointmentId. (5) Admin endpoints (/api/admin/leads, /api/admin/stats) correctly return 401 Unauthorized without authentication. Email CTA booking URL change did NOT break the submit-assessment flow. All backend endpoints working correctly. No critical issues found."

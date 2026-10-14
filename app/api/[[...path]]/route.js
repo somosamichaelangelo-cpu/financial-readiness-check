@@ -95,7 +95,9 @@ export async function POST(request) {
         const recommendations = generateRecommendations(readinessScore, parsedAssessment)
 
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || ''
-        const bookingUrl = `${baseUrl}/book-appointment?leadId=${lead.id}`
+        // Client report CTA points to the public Google Calendar booking page
+        // (same destination as the in-app "Book Free Consultation" button).
+        const bookingUrl = 'https://calendar.app.google/XGDtjDgS7bago5Uo6'
         const adminLeadUrl = baseUrl ? `${baseUrl}/admin/leads/${lead.id}` : ''
 
         emailSent = await sendAssessmentEmails({
